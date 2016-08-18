@@ -1,0 +1,56 @@
+            <?php 
+            $roleId = $this->session->userdata('roleId');
+             $baseURL =base_url();
+             $patientView ="0";
+             $testReqProgView="0";
+             $specimanView="0";
+             $emplaoyeeView="0";
+        if($roleId == "1")
+        {
+            //MLT
+           $patientView ="1";
+             $testReqProgView="1";
+             $specimanView="1";
+             $emplaoyeeView="1";
+        }
+        else if ($roleId == "2")
+        {
+            //Doctor
+           $patientView ="1";
+             $testReqProgView="1";
+             $specimanView="1";
+             $emplaoyeeView="1";
+        }
+           else if ($roleId == "4")
+        {
+            //Lab Assistent -Conter 
+             $patientView ="0";
+             $testReqProgView="1";
+             $specimanView="1";
+             $emplaoyeeView="0";
+        }
+             else if ($roleId == "5")
+        {
+            //Nurse
+                 $patientView ="1";
+             $testReqProgView="0";
+             $specimanView="1";
+             $emplaoyeeView="0";
+        }
+           else if ($roleId == "3")
+        {
+            //Chief MLT
+             $patientView ="1";
+             $testReqProgView="1";
+             $specimanView="1";
+             $emplaoyeeView="1";
+        }else {
+            //Other
+             $patientView ="0";
+             $testReqProgView="0";
+             $specimanView="0";
+             $emplaoyeeView="0";                                                                                                                } ?>
+                      <div class="box-footer clearfix">
+                        <a href="<?php echo base_url(); ?>new_test_request_controller" class="btn btn-sm btn-info btn-flat pull-left">Place New Order</a>
+                        <a href="<?php echo base_url(); ?>test_request_progress_controller" class="btn btn-sm btn-success btn-flat pull-right">View All Orders</a>
+                    </div>

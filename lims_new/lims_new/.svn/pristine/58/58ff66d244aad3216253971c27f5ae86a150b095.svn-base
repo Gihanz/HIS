@@ -1,0 +1,136 @@
+<?php
+
+class Patient_Controller_1 extends CI_Controller {
+
+    function __construct() {
+        parent::__construct();
+        
+         $this->load->library('session');
+        $this->_init();
+    }
+
+    private function _init() 
+    {        
+              $this->output->set_template('default');
+       $this->load->library('session');
+      $role = $this->session->userdata('role');
+         $roleId = $this->session->userdata('roleId');
+        
+        if($roleId == "1")
+        {
+            $this->load->section('sidebar', 'includes/sidebarMLT');
+        }
+        else if ($roleId == "2")
+        {
+            $this->load->section('sidebar', 'includes/sidebarDoctor');
+        }
+           else if ($roleId == "4")
+        {
+            $this->load->section('sidebar', 'includes/sidebarLabAssistant');
+        }
+             else if ($roleId == "5")
+        {
+            $this->load->section('sidebar', 'includes/sidebarNurse');
+        }
+           else if ($roleId == "3")
+        {
+            $this->load->section('sidebar', 'includes/sidebar');
+        }else {
+           $this->load->section('sidebar', 'includes/sidebarNon');                                                                                                                         }
+
+
+    }
+
+    public function index() {
+
+        $this->load->model('Patient_Model');
+        $data['all_patient_result'] = $this->Patient_Model->GetAllPatients();
+        
+
+          $role = $this->session->userdata('role');
+        $roleId = $this->session->userdata('roleId');
+
+        //Chief MLT,Doctor, MLT
+        if($roleId == "3"||$roleId == "1"||$roleId == "2")
+        {
+               $this->load->view('patient_view', $data);
+        }
+        else 
+        {
+            $this->load->view('login_view');
+        }
+    }
+
+    public function GetAllExternalPatients() {
+
+
+
+        $this->load->model('Patient_Model');
+        $result = $this->Patient_Model->GetAllExternalPatients();
+
+        echo json_encode($result);
+    }
+
+    public function GetExternalPatientById($data) {
+
+        $this->load->model('Patient_Model');
+        $result = $this->Patient_Model->GetExternalPatientById($data);
+
+        echo json_encode($result);
+    }
+
+    public function GetAllHospitalpatients() {
+
+
+        $this->load->model('Patient_Model');
+        $result = $this->Patient_Model->GetAllHospitalpatients();
+
+        echo json_encode($result);
+    }
+
+    public function GetHospitalpatientsByHID($data) {
+
+
+        $this->load->model('Patient_Model');
+        $result = $this->Patient_Model->GetHospitalpatientsByHID($data);
+
+        echo json_encode($result);
+    }
+
+    public function InsertNewPatient() {
+       
+
+        if (isset($_POST['patient'])) {
+            $Data = $_POST['patient'];
+
+            $data_string = json_encode($Data);
+
+            $this->load->model('Patient_Model');
+            $ss = $this->Patient_Model->InsertNewPatient($data_string);
+
+            echo json_encode($ss);
+        }
+    }
+
+
+     public function UpdatePatient() {
+        if (isset($_POST['patient'])) {
+            $Data = $_POST['patient'];
+
+            $data_string = json_encode($Data);
+
+            $this->load->model('Patient_Model');
+            $ss = $this->Patient_Model->UpdatePatient($data_string);
+
+            echo json_encode($ss);
+        }
+    }
+    public function GetPatientCount() {
+        $this->load->model('Patient_Model');
+        $result = $this->Patient_Model->GetPatientCount();
+
+        echo json_encode($result);
+        exit;
+    }
+
+}

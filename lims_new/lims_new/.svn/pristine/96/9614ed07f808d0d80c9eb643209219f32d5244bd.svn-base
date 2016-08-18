@@ -1,0 +1,110 @@
+            <?php 
+            $roleId = $this->session->userdata('roleId');
+             $baseURL =base_url();
+             $patientView ="0";
+             $testReqProgView="0";
+             $specimanView="0";
+             $emplaoyeeView="0";
+        if($roleId == "1")
+        {
+            //MLT
+           $patientView ="1";
+             $testReqProgView="1";
+             $specimanView="1";
+             $emplaoyeeView="1";
+        }
+        else if ($roleId == "2")
+        {
+            //Doctor
+           $patientView ="1";
+             $testReqProgView="1";
+             $specimanView="1";
+             $emplaoyeeView="0";
+        }
+           else if ($roleId == "4")
+        {
+            //Lab Assistent -Conter 
+             $patientView ="0";
+             $testReqProgView="1";
+             $specimanView="1";
+             $emplaoyeeView="0";
+        }
+             else if ($roleId == "5")
+        {
+            //Nurse
+                 $patientView ="1";
+             $testReqProgView="1S";
+             $specimanView="1";
+             $emplaoyeeView="0";
+        }
+           else if ($roleId == "3")
+        {
+            //Chief MLT
+             $patientView ="1";
+             $testReqProgView="1";
+             $specimanView="1";
+             $emplaoyeeView="1";
+        }else {
+            //Other
+             $patientView ="0";
+             $testReqProgView="0";
+             $specimanView="0";
+             $emplaoyeeView="0";                                                                                                                } ?>
+        <div class="row">
+            <div class="col-lg-3 col-xs-6">
+                <!-- small box -->
+                <div class="small-box bg-aqua">
+                    <div class="inner">
+                        <h3 id="patient_count"></h3>
+                        <p>Patients</p>
+                    </div>
+                    <div class="icon">
+                        <i class="ion ion-ios-people"></i>
+                    </div>
+                  <?php if($patientView == "1")
+        {  echo '<a href="'.$baseURL.'patient_controller_1" class="small-box-footer">More info<i class="fa fa-arrow-circle-right"></i></a>'; }?>
+                </div>
+            </div><!-- ./col -->
+            <div class="col-lg-3 col-xs-6">
+                <!-- small box -->
+                <div class="small-box bg-green">
+                    <div class="inner">
+                        <h3 id="test_request_count"><sup style="font-size: 20px"></sup></h3>
+                        <p>Test Request</p>
+                    </div>
+                    <div class="icon">
+                        <i class="ion ion-ios-cart"></i>
+                    </div>
+                             <?php if($testReqProgView == "1")
+        {  echo '<a href="'.$baseURL.'test_request_progress_controller" class="small-box-footer">More info<i class="fa fa-arrow-circle-right"></i></a>'; } ?>
+                </div>
+            </div><!-- ./col -->
+            <div class="col-lg-3 col-xs-6">
+                <!-- small box -->
+                <div class="small-box bg-yellow">
+                    <div class="inner">
+                        <h3>44</h3>
+                        <p>Specimens</p>
+                    </div>
+                    <div class="icon">
+                        <i class="ion ion-person-add"></i>
+                    </div>
+                    <?php if($specimanView == "1")
+        {  echo '<a href="'.$baseURL.'mri_specimen_categorize" class="small-box-footer">More info<i class="fa fa-arrow-circle-right"></i></a>';}?>
+                </div>
+            </div><!-- ./col -->
+            <div class="col-lg-3 col-xs-6">
+                <!-- small box -->
+                <div class="small-box bg-red">
+                    <div class="inner">
+                        <h3>15</h3>
+                        <p>User Registrations</p>
+                    </div>
+                    <div class="icon">
+                        <i class="ion ion-pie-graph"></i>
+                    </div>
+                          <?php if($emplaoyeeView == "1")
+        {  echo '<a href="'.$baseURL.'employee_controller" class="small-box-footer">More info<i class="fa fa-arrow-circle-right"></i></a>'; }?>
+                </div>
+            </div><!-- ./col -->
+        </div><!-- /.row -->

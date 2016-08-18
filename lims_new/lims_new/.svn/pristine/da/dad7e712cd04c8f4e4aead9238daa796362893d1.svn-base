@@ -1,0 +1,10 @@
+ALTER TABLE `mri_laboratory_test` ADD `defult_test_comment` VARCHAR( 1000 ) NULL ;
+
+ALTER TABLE `mri_binary_results` ADD `result_comment` VARCHAR( 1000 ) NULL AFTER `ftest_request_id` ;
+ALTER TABLE `mri_binary_results` ADD `result_enterd_by` INT NULL;
+ALTER TABLE `mri_binary_results` ADD `verified_by` INT NULL;
+ALTER TABLE `mri_patient` ADD `age` VARCHAR( 10 ) NULL DEFAULT NULL ;
+ALTER TABLE `mri_patient` CHANGE `birthday` `birthday` DATE NULL DEFAULT NULL ;
+
+ALTER TABLE `mri_test_request` CHANGE `comments` `comments` VARCHAR( 1000 ) CHARACTER SET latin1 COLLATE latin1_swedish_ci NULL DEFAULT NULL ;
+ALTER TABLE `mri_binary_results` CHANGE `result_value` `result_value` VARCHAR( 20 ) NULL DEFAULT NULL ;

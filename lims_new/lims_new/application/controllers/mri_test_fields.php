@@ -1,0 +1,246 @@
+<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+
+class Mri_test_fields extends CI_Controller {
+    function __construct()
+    {
+        parent::__construct();
+        $this->load->model('mri_test_fields_model','fields');
+    }
+
+    private function _init()
+    {
+        $this->output->set_template('default');
+       $this->load->library('session');
+      $role = $this->session->userdata('role');
+         $roleId = $this->session->userdata('roleId');
+        
+        if($roleId == "1")
+        {
+            $this->load->section('sidebar', 'includes/sidebarMLT');
+        }
+        else if ($roleId == "2")
+        {
+            $this->load->section('sidebar', 'includes/sidebarDoctor');
+        }
+           else if ($roleId == "4")
+        {
+            $this->load->section('sidebar', 'includes/sidebarLabAssistant');
+        }
+             else if ($roleId == "5")
+        {
+            $this->load->section('sidebar', 'includes/sidebarNurse');
+        }
+           else if ($roleId == "3")
+        {
+            $this->load->section('sidebar', 'includes/sidebar');
+        }   else if ($roleId == "6")
+        {
+            //Admin
+            $this->load->section('sidebar', 'includes/sidebarAdmin');
+        }
+            else if ($roleId == "7")
+        {
+            //Cosultnant
+            $this->load->section('sidebar', 'includes/sidebarConsultant');
+        }
+        else {
+           $this->load->section('sidebar', 'includes/sidebarNon');                                                                                                                         }
+    }
+
+    public function index()
+    {
+		
+        $this->_init();
+        $data['departments'] = $this->fields->getAllDepartments();
+        $data['labs'] = $this->fields->getAllLabs();
+        $data['specTypes'] = $this->fields->getAllSpecimenTypes();
+		
+		$data['all_laboratory_test'] = $this->fields->getAllLabTestTypes();
+
+         $role = $this->session->userdata('role');
+        $roleId = $this->session->userdata('roleId');
+        //Chief MLT ,Doctor,Admin ,Consutant
+        if($roleId == "3"||$roleId == "1"||$roleId == "6"||$roleId == "7")
+        {
+              $this->load->view("mri_test_fields", $data);
+        }
+        else 
+        {
+           // $this->load->view('login_view');
+             echo '<script type="text/javascript">
+           window.location = "http://localhost/lims_new/login_controller"
+           </script>';
+        }
+
+       
+    }
+
+    public function add_test_name() {
+        $data = array("success"=>false);
+        $return = $this->fields->addLabTest($_POST);
+        if($return==true) {
+            $data["success"] = true;
+        }
+        echo json_encode($data);
+    }
+
+    public function getAllLabTestTypes() {
+        $data = $this->fields->getAllLabTestTypes();
+        echo json_encode($data);
+    }
+
+    public function getTestParentTypes() {
+        if(isset($_POST["labTestId"])) {
+            echo $this->fields->getParentFields($_POST["labTestId"]);
+        }
+    }
+
+    public function addTestParentField() {
+        $data = array("message"=>"Unknown Error");
+        if(isset($_POST["labTestId"]) && isset($_POST["testName"])
+            && !empty($_POST["labTestId"]) && !empty($_POST["testName"])) {
+            $send = array("lab_test_id"=>$_POST["labTestId"],"test_field_name"=>$_POST["testName"]);
+            $ret = $this->fields->addTestParentField($send);
+            if($ret==true){
+                $data["message"] = true;
+            }
+        } else {
+            $data["message"] = "Required Field Missing";
+        }
+        echo json_encode($data);
+    }
+
+    public function checkForExistenceOfParentData() {
+        $data = array("success"=>"false");
+        if(isset($_POST["gender"]) && isset($_POST["parent_id"])) {
+            $send = array("gender"=>$_POST["gender"],"parentId"=>$_POST["parent_id"]);
+            $ret = $this->fields->CheckForExistenceParents($send);
+            if($ret==true){
+                $data["success"] = true;
+            }
+        }
+        echo json_encode($data);
+    }
+
+    public function addParentFieldData() {
+        $data = array("success"=>"Unknown Error");
+        if(isset($_POST["gender"]) && isset($_POST["parentID"]) && isset($_POST["minValue"])
+            && isset($_POST["maxValue"]) && isset($_POST["minAge"]) && isset($_POST["maxAge"])
+            && !empty($_POST["gender"]) && !empty($_POST["parentID"]) && !empty($_POST["minValue"])
+            && !empty($_POST["maxValue"]) && !empty($_POST["minAge"]) && !empty($_POST["maxAge"])
+        ){
+            $send = $_POST;
+            $ret = $this->fields->addParentFieldData($send);
+            if($ret==true)
+                $data["success"]=true;
+            else
+                $data["success"]="Failed to add data";
+        }else {
+            $data["success"]="Required field missing";
+        }
+        echo json_encode($data);
+    }
+
+    public function getTestParentFieldData() {
+        $pageData = '<table id="viewDataTable" class="table table-bordered table-striped">
+                    <thead>
+                    <tr>
+                        <th>Field Name</th>
+                        <th>Gender</th>
+                        <th>Min Value</th>
+                        <th>Max Value</th>
+                        <th>Min Age</th>
+                        <th>Max Age</th>
+                        <th>Unit</th>
+                    </tr>
+                    </thead>
+                    <tbody>';
+        if(isset($_POST["labTestId"]) && !empty($_POST["labTestId"])) {
+            $ret = $this->fields->getTestParentData($_POST["labTestId"]);
+            foreach($ret as $row) {
+                $pageData .= '<tr>';
+                $pageData .= '<td>'.$row->mriTestParentFields->testParentFieldName.'<span></td>';
+                $pageData .= '<td>'.$row->gender.'</td>';
+                $pageData .= '<td><span class="badge bg-green">'.$row->minVal.'<span></td>';
+                $pageData .= '<td><span class="badge bg-red">'.$row->maxVal.'<span></td>';
+                $pageData .= '<td><span class="badge bg-green">'.$row->minage.'<span></td>';
+                $pageData .= '<td><span class="badge bg-red">'.$row->maxAge.'<span></td>';
+                $pageData .= '<td>'.$row->unit.'</td>';
+                $pageData .= '</tr>';
+            }
+        }
+        $pageData .= '</tbody>
+                    <tfoot>
+                    <tr>
+                        <th>Field Name</th>
+                        <th>Gender</th>
+                        <th>Min Value</th>
+                        <th>Max Value</th>
+                        <th>Min Age</th>
+                        <th>Max Age</th>
+                        <th>Unit</th>
+                    </tr>
+                    </tfoot>
+                </table>';
+        echo $pageData;
+        //print_r($this->fields->getTestParentData($_POST["labTestId"]));
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Sub Field FunctionS
+
+    public function addTestSubField() {
+        $data = array("message"=>"Unknown Error");
+        if(isset($_POST["parentField"]) && isset($_POST["testName"])
+            && !empty($_POST["parentField"]) && !empty($_POST["testName"])) {
+            $send = array("parentField"=>$_POST["parentField"],"testName"=>$_POST["testName"]);
+            $ret = $this->fields->addTestSubField($send);
+            if($ret==true){
+                $data["message"] = true;
+            }
+        } else {
+            $data["message"] = "Required Field Missing";
+        }
+        echo json_encode($data);
+    }
+
+    public function getTestSubTypes() {
+        if(isset($_POST["parentField"])) {
+            echo $this->fields->getSubFields($_POST["parentField"]);
+        }
+    }
+
+    public function addSubFieldData() {
+        $data = array("success"=>"Unknown Error");
+        if(isset($_POST["gender"]) && isset($_POST["parentID"]) && isset($_POST["minValue"])
+            && isset($_POST["maxValue"]) && isset($_POST["minAge"]) && isset($_POST["maxAge"])
+            && !empty($_POST["gender"]) && !empty($_POST["parentID"]) && !empty($_POST["minValue"])
+            && !empty($_POST["maxValue"]) && !empty($_POST["minAge"]) && !empty($_POST["maxAge"])
+        ){
+            $send = $_POST;
+            $ret = $this->fields->addSubFieldData($send);
+            if($ret==true)
+                $data["success"]=true;
+            else
+                $data["success"]="Failed to add data";
+        }else {
+            $data["success"]="Required field missing";
+        }
+        echo json_encode($data);
+    }
+	
+	public function UpdateLaboratoryTest()
+    {
+        if (isset($_POST['labTestId'])) {
+            $Data = $_POST['labTestId'];
+
+            $data_string = json_encode($Data);
+            
+            $this->load->model('laboratory_test_model');
+            $ss = $this->laboratory_test_model->UpdateLaboratoryTest($data_string);
+            
+            echo json_encode($ss);
+            
+        }
+}
+}

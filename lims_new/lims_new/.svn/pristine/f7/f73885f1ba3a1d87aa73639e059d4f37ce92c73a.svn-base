@@ -1,0 +1,120 @@
+<?php
+
+session_start();
+
+class Login_Controller extends CI_Controller {
+
+    function __construct() {
+        parent::__construct();
+      //  $this->load->model('login_model', '', TRUE);
+        $this->load->library('form_validation');
+        $this->form_validation->set_error_delimiters('<div class="alert alert-danger" role="alert">', '</div>');
+    }
+
+    function index() {      
+        
+//        print_r("akaskadskl");
+//        exit();
+        $data['in'] = FALSE;
+        $this->load->view('login_view',$data);
+    }
+
+    function logout() {
+        $this->session->unset_userdata('logged_in');
+        session_destroy();
+        
+        $data['in'] = TRUE;
+        $this->load->view('login_view',$data);
+    }
+
+    function login_validate() {
+        //This method will have the credentials validation
+        $this->load->library('form_validation');
+
+        $this->form_validation->set_rules('username', 'Username', 'trim|required|xss_clean');
+        $this->form_validation->set_rules('password', 'Password', 'trim|required|xss_clean|callback_password_check');
+
+        
+        if ($this->form_validation->run() == FALSE) {
+            $this->load->view('login_view');
+        } else {
+            redirect('dashboard_controller');
+        }
+    }
+
+    function password_check($password) {
+        print_r("Pass_Check"); 
+        //Field validation succeeded.&nbsp; Validate against database
+        $username = $this->input->post('username');
+
+        $this->load->model('login_model');
+        //query the database
+        $row = $this->login_model->login($username, $password);
+	$this->load->library('session');
+        $newdata = array("isLogin"=>false);
+        if($row!='false') {
+            $row = json_decode($row);
+            $this->load->library('session');
+
+            //  'role'     => $row[0]->mriUserRoles->roleName,
+            //Add IP Based Validation 5 17 16
+            $userloginIp=$this->get_client_ip();
+           $validIp=  $this->login_model->ipValidate($username,$userloginIp);
+           $row2 =json_decode($validIp);
+            $validIp2=$row2[0]->isActive;
+
+           $roleId=$row[0]->mriUserRoles->roleId;
+
+            $newdata = array(
+                   "isLogin"=>true,
+                   'username'  => $row[0]->userName,
+                   'role'     =>  $row[0]->mriUserRoles->roleName,
+                   'roleId'     => $row[0]->mriUserRoles->roleId,
+                   'name' => $row[0]->mriEmployee->name
+               );  
+            $this->session->set_userdata($newdata);
+
+            //Check for Counter users with invalid IP or With Empty IP
+       if($roleId=='4'&&($validIp2=='I'||$validIp2=='')){
+            $this->form_validation->set_message('password_check', 'Login from Invalid IP');
+           return false;     
+       }else {
+            return true;     
+        }
+                   
+        
+        
+        } else {
+            $this->form_validation->set_message('password_check', 'Invalid username or password');
+            return false;
+        }
+        $data =$this->session->set_userdata($newdata);
+        
+        return $data;
+    }
+
+
+
+    // Function to get the client IP address 17 05 16
+    function get_client_ip() {
+    $ipaddress = '';
+    if (getenv('HTTP_CLIENT_IP'))
+        $ipaddress = getenv('HTTP_CLIENT_IP');
+    else if(getenv('HTTP_X_FORWARDED_FOR'))
+        $ipaddress = getenv('HTTP_X_FORWARDED_FOR');
+    else if(getenv('HTTP_X_FORWARDED'))
+        $ipaddress = getenv('HTTP_X_FORWARDED');
+    else if(getenv('HTTP_FORWARDED_FOR'))
+        $ipaddress = getenv('HTTP_FORWARDED_FOR');
+    else if(getenv('HTTP_FORWARDED'))
+       $ipaddress = getenv('HTTP_FORWARDED');
+    else if(getenv('REMOTE_ADDR'))
+        $ipaddress = getenv('REMOTE_ADDR');
+    else
+        $ipaddress = 'UNKNOWN';
+    return $ipaddress;
+    }
+
+}
+
+?>

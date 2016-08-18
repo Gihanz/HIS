@@ -1,0 +1,64 @@
+//24 06 16
+ALTER TABLE `mri_laboratory_test` ADD `defult_test_comment` VARCHAR( 1000 ) NULL ;
+
+ALTER TABLE `mri_binary_results` ADD `result_comment` VARCHAR( 1000 ) NULL AFTER `ftest_request_id` ;
+ALTER TABLE `mri_binary_results` ADD `result_enterd_by` INT NULL;
+ALTER TABLE `mri_binary_results` ADD `verified_by` INT NULL;
+ALTER TABLE `mri_patient` ADD `age` VARCHAR( 10 ) NULL DEFAULT NULL ;
+ALTER TABLE `mri_patient` CHANGE `birthday` `birthday` DATE NULL DEFAULT NULL ;
+
+ALTER TABLE `mri_test_request` CHANGE `comments` `comments` VARCHAR( 1000 ) CHARACTER SET latin1 COLLATE latin1_swedish_ci NULL DEFAULT NULL ;
+ALTER TABLE `mri_binary_results` CHANGE `result_value` `result_value` VARCHAR( 20 ) NULL DEFAULT NULL ;
+
+
+//27 06 16
+
+
+ALTER TABLE `mri_binary_results` ADD INDEX ( `result_entered_by`) ;
+ALTER TABLE `mri_binary_results` ADD INDEX ( `verified_by` ) ;
+
+ALTER TABLE `mri_binary_results` ADD CONSTRAINT `fk2_binaryResults` FOREIGN KEY ( `result_entered_by` ) REFERENCES `his`.`mri_user` (
+`user_id`
+) ON DELETE CASCADE ON UPDATE CASCADE ;
+
+
+ALTER TABLE `mri_binary_results` ADD CONSTRAINT `fk3_binaryResults` FOREIGN KEY ( `verified_by` ) REFERENCES `his`.`mri_user` (
+`user_id`
+) ON DELETE CASCADE ON UPDATE CASCADE ;
+
+
+------------------------------------------------------------------------------------------
+
+ALTER TABLE `mri_test_request` ADD `requested_by` INT NULL DEFAULT NULL ;
+ALTER TABLE `mri_test_request` CHANGE `requested_by` `requested_by` INT( 11 ) NULL ;
+
+ALTER TABLE `mri_binary_results` ADD INDEX ( `requested_by`) ;
+ 
+ALTER TABLE `mri_test_request` ADD CONSTRAINT `fk6_mri_test_request` FOREIGN KEY ( `requested_by` ) REFERENCES `his`.`mri_user` (
+`user_id`
+) ON DELETE CASCADE ON UPDATE CASCADE ;
+
+* Add the user for existing requests
+--------------------------------------------------------------------------------------------
+
+ALTER TABLE `mri_specimen` ADD `inserted_by` INT NULL ;
+ALTER TABLE `mri_specimen` ADD INDEX ( `inserted_by` ) ;
+
+ALTER TABLE `mri_specimen` ADD CONSTRAINT `fk3_mri_specimen` FOREIGN KEY ( `inserted_by` ) REFERENCES `his`.`mri_user` (
+`user_id`
+) ON DELETE CASCADE ON UPDATE CASCADE ;
+
+ALTER TABLE `mri_specimen` ADD `insert_datetime` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ;
+
+----------------------------------------------------------------------------------
+28 6 16 Patiet null
+
+ALTER TABLE `mri_patient` CHANGE `sex` `sex` VARCHAR( 10 ) CHARACTER SET latin1 COLLATE latin1_swedish_ci NULL ,
+CHANGE `nic` `nic` VARCHAR( 50 ) CHARACTER SET latin1 COLLATE latin1_swedish_ci NULL ;
+
+
+ALTER TABLE `mri_patient` CHANGE `sex` `sex` VARCHAR( 10 ) CHARACTER SET latin1 COLLATE latin1_swedish_ci NULL ,
+CHANGE `nic` `nic` VARCHAR( 50 ) CHARACTER SET latin1 COLLATE latin1_swedish_ci NULL ;
+
+ALTER TABLE `mri_internal_patient` CHANGE `address` `address` VARCHAR( 300 ) CHARACTER SET latin1 COLLATE latin1_swedish_ci NULL ,
+CHANGE `contact_no_2` `contact_no_2` VARCHAR( 50 ) CHARACTER SET latin1 COLLATE latin1_swedish_ci NULL ;

@@ -1,0 +1,244 @@
+package lib.driver.mri.driver_class;
+
+import java.util.List;
+
+import javax.persistence.EntityManager;
+
+import lib.SessionFactoryUtil;
+
+import org.hibernate.Criteria;
+import org.hibernate.HibernateException;
+import org.hibernate.Query;
+import org.hibernate.SQLQuery;
+import org.hibernate.Session;
+import org.hibernate.Transaction;
+
+import core.classes.mri.MriBinaryResults;
+import core.classes.mri.MriTestRequest;
+import core.classes.mri.MriTestResult;
+
+public class MriBinaryResultsDBDriver {
+	
+	public List GetTestRequests() {
+		Session session = SessionFactoryUtil.getSessionFactory().openSession();
+		Transaction tx = null;
+		tx = session.beginTransaction();
+		System.out.println("GetTestRequests - For result enter & rechack");
+	//	EntityManager em = factory.createEntityManager();
+	//	String sql = "SELECT * FROM mri_test_request r, mri_laboratory_test l, mri_patient p where r.flaboratory_test_id=l.laboratory_test_id and"
+	//			+ " r.fpatient_id=p.patient_id and l.is_binary=1 and (r.status=1 or r.status=3)";
+		String sql ="SELECT * FROM mri_test_request m "+
+"LEFT OUTER JOIN mri_binary_results s ON m.test_request_id = s.ftest_request_id, mri_laboratory_test l, mri_patient p "+
+"WHERE m.flaboratory_test_id = l.laboratory_test_id AND m.fpatient_id = p.patient_id "+
+"AND l.is_binary =1 AND (m.status =0 OR m.status =3) ORDER BY m.test_request_id";
+		
+		SQLQuery query = session.createSQLQuery(sql);
+		query.setResultTransformer(Criteria.ALIAS_TO_ENTITY_MAP);
+		List results = query.list();
+
+	   tx.commit();
+
+		return results;
+	}
+	
+	public List GetTestRequestForPeriod(String start,String end) {
+		System.out.println("GetTestRequestForPeriod - For result enter & rechack");
+		
+		Session session = SessionFactoryUtil.getSessionFactory().openSession();
+		Transaction tx = null;
+		tx = session.beginTransaction();
+
+		String sql = "SELECT * FROM mri_test_request r, mri_laboratory_test l, mri_patient p where r.status=0 and r.flaboratory_test_id=l.laboratory_test_id and"
+				+ " r.fpatient_id=p.patient_id and l.is_binary=1 and test_request_date>='"+start+"' and test_request_date<='"+end+" AND (r.status =0 OR r.status =3)'";
+		SQLQuery query = session.createSQLQuery(sql);
+		query.setResultTransformer(Criteria.ALIAS_TO_ENTITY_MAP);
+		List results = query.list();
+		
+		tx.commit();
+
+		return results;
+	}
+	
+	public List GetTestRequestForRequastIDRange(int start,int end) {
+		System.out.println("GetTestRequestForRequastIDRange");
+		
+		Session session = SessionFactoryUtil.getSessionFactory().openSession();
+		Transaction tx = null;
+		tx = session.beginTransaction();
+
+		String sql = "SELECT * FROM mri_test_request r, mri_laboratory_test l, mri_patient p where r.status=0 and r.flaboratory_test_id=l.laboratory_test_id and"
+				+ " r.fpatient_id=p.patient_id and l.is_binary=1 and test_request_date>='"+start+"' and test_request_date<='"+end+"'";
+		SQLQuery query = session.createSQLQuery(sql);
+		query.setResultTransformer(Criteria.ALIAS_TO_ENTITY_MAP);
+		List results = query.list();
+		
+		tx.commit();
+
+		return results;
+	}
+	
+	public boolean addSingleResult(MriBinaryResults result) {
+		System.out.println("addSingleResult");
+		Session session = SessionFactoryUtil.getSessionFactory().openSession();
+		Transaction tx = null;
+		tx = session.beginTransaction();
+		try{
+			
+			session.save(result);			
+			System.out.println("addSingleResult Resut table");
+			MriTestRequest req = (MriTestRequest) session.load(MriTestRequest.class, result.getMriTestRequest().getTestRequestId());
+			req.setStatus(result.getMriTestRequest().getStatus());
+			req.setComments(result.getMriTestRequest().getComments());
+			session.update(req);
+			
+			tx.commit();
+			System.out.println("testing\n\n"+result.getMriTestRequest().getTestRequestId());
+			return true;
+		} catch (RuntimeException ex) {
+			if (tx != null && tx.isActive()) {
+			try {
+					tx.rollback();
+				} catch (HibernateException he) {
+					System.err.println("Error rolling back transaction");
+				}
+				throw ex;
+			}
+			return false;
+		}
+	}
+	
+	public boolean updateSingleResult(MriBinaryResults result,int resultID) {
+		System.out.println("updateSingleResult");
+		Session session = SessionFactoryUtil.getSessionFactory().openSession();
+		Transaction tx = null;
+		tx = session.beginTransaction();
+		try{
+		
+			MriBinaryResults res = (MriBinaryResults) session.load(MriBinaryResults.class, resultID);
+			res.setEnteredBy(result.getEnteredBy());
+		    res.setResultComment(result.getResultComment());
+		res.setResultValue(result.getResultValue());
+			session.update(res);
+					
+			System.out.println("update Resut table"+result.getResultComment());
+			MriTestRequest req = (MriTestRequest) session.load(MriTestRequest.class, result.getMriTestRequest().getTestRequestId());
+			req.setStatus(result.getMriTestRequest().getStatus());
+			req.setComments(result.getMriTestRequest().getComments());
+			session.update(req);
+			
+			tx.commit();
+			System.out.println("testing\n\n"+result.getMriTestRequest().getTestRequestId());
+			return true;
+		} catch (RuntimeException ex) {
+			if (tx != null && tx.isActive()) {
+			try {
+					tx.rollback();
+				} catch (HibernateException he) {
+					System.err.println("Error rolling back transaction");
+				}
+				throw ex;
+			}
+			return false;
+		}
+	}
+	
+	public void updateRequestTable(int reqId) {
+		System.out.println("updateRequestTable");
+		Session session = SessionFactoryUtil.getSessionFactory().openSession();
+		MriTestRequest req = (MriTestRequest) session.load(MriTestRequest.class, reqId);
+		req.setStatus(1);
+		session.update(req);
+		//return true;
+	}
+	
+	public List GetCompletedTestRequestsForPeriod(String start,String end) {
+		System.out.println("GetCompletedTestRequestsForPeriod -Print ");
+		Session session = SessionFactoryUtil.getSessionFactory().openSession();
+		Transaction tx = null;
+		tx = session.beginTransaction();
+
+		String sql = "SELECT * FROM mri_test_request r, mri_laboratory_test l, mri_patient p where r.flaboratory_test_id=l.laboratory_test_id and"
+				+ " r.fpatient_id=p.patient_id and l.is_binary=1 and test_request_date>='"+start+"' and test_request_date<='"+end+"' and r.status<>0 ";
+		SQLQuery query = session.createSQLQuery(sql);
+		query.setResultTransformer(Criteria.ALIAS_TO_ENTITY_MAP);
+		List results = query.list();
+		
+		tx.commit();
+
+		return results;
+	}
+	
+	public List GetTestComplatedForRequastIDRange(int start,int end) {
+		System.out.println("GetTestRequestForRequastIDRange Print");
+		
+		Session session = SessionFactoryUtil.getSessionFactory().openSession();
+		Transaction tx = null;
+		tx = session.beginTransaction();
+
+	String sql = "SELECT * FROM mri_test_request r, mri_laboratory_test l, mri_patient p where r.flaboratory_test_id=l.laboratory_test_id and"
+				+ " r.fpatient_id=p.patient_id and l.is_binary=1 AND r.test_request_id BETWEEN "+start+" AND "+end+" and r.status<>0 ";
+		
+		//String sql = "SELECT * FROM mri_test_request r, mri_laboratory_test l, mri_patient p where r.flaboratory_test_id=l.laboratory_test_id and"
+		//		+ " r.fpatient_id=p.patient_id and l.is_binary=1 AND ( r.test_request_id > "+start+" OR "+end+">r.test_request_id  ) and r.status<>0 ";
+		SQLQuery query = session.createSQLQuery(sql);
+		query.setResultTransformer(Criteria.ALIAS_TO_ENTITY_MAP);
+		List results = query.list();
+		
+		tx.commit();
+
+		return results;
+	}
+	
+	public List GetCompletedTestRequests() {
+		Session session = SessionFactoryUtil.getSessionFactory().openSession();
+		Transaction tx = null;
+		tx = session.beginTransaction();
+		System.out.println("GetCompletedTestRequests Print ");
+		//test requst to be verify after result entering 
+		String sql = "SELECT * FROM mri_test_request r, mri_laboratory_test l, mri_patient p where r.flaboratory_test_id=l.laboratory_test_id and"
+				+ " r.fpatient_id=p.patient_id and l.is_binary=1  and r.status<>0;";
+		SQLQuery query = session.createSQLQuery(sql);
+		query.setResultTransformer(Criteria.ALIAS_TO_ENTITY_MAP);
+		List results = query.list();
+		
+		tx.commit();
+
+		return results;
+	}
+	
+	public List GetCompletedTestRequestsById(int reqid) {
+		System.out.println("Print Singel Report");
+		Session session = SessionFactoryUtil.getSessionFactory().openSession();
+		Transaction tx = null;
+		tx = session.beginTransaction();
+
+		//String sql = "SELECT * FROM mri_test_request r, mri_laboratory_test l, mri_patient p where r.flaboratory_test_id=l.laboratory_test_id and"
+		//+ " r.fpatient_id=p.patient_id and l.is_binary=1  and r.status<>0 and r.test_request_id='"+reqid+"'";
+
+		
+		String sql="SELECT p.patient_id, p.name ,l.test_full_name,r.result_value FROM mri_internal_patient i RIGHT OUTER JOIN mri_patient p ON i.fpatient_id = p.patient_id LEFT OUTER JOIN mri_hospital_patient h ON h.fpatient_id = p.patient_id INNER JOIN mri_test_request t ON t.fpatient_id = p.patient_id INNER JOIN mri_binary_results r ON r.ftest_request_id = t.test_request_id LEFT OUTER JOIN mri_laboratory_test l ON t.flaboratory_test_id = l.laboratory_test_id"
++" WHERE l.is_binary =1 AND t.status <>0 AND t.test_request_id = "+reqid+" ";
+	SQLQuery query = session.createSQLQuery(sql);
+		query.setResultTransformer(Criteria.ALIAS_TO_ENTITY_MAP);
+		List results = query.list();
+		
+		tx.commit();
+		return results;
+	}
+	
+	public List GetSingleTestRequestData(int reqid) {
+		Session session = SessionFactoryUtil.getSessionFactory().openSession();
+		Transaction tx = null;
+		tx = session.beginTransaction();
+
+		String sql = "SELECT * FROM mri_test_request r, mri_laboratory_test l, mri_patient p, mri_laboratory lb, mri_binary_results re where r.flaboratory_test_id=l.laboratory_test_id and"
+				+ " r.fpatient_id=p.patient_id and lb.laboratory_id=l.flaboratory_id and re.ftest_request_id=r.test_request_id and  l.is_binary=1 and r.status=1 and r.test_request_id='"+reqid+"'";
+		SQLQuery query = session.createSQLQuery(sql);
+		query.setResultTransformer(Criteria.ALIAS_TO_ENTITY_MAP);
+		List results = query.list();
+		
+		tx.commit();
+
+		return results;
+	}
+}

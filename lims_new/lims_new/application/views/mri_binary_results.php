@@ -1,0 +1,618 @@
+<?php
+/**
+ * Created by PhpStorm.
+ * User: Dushyantha
+ * Date: 11/7/15
+ * Time: 8:01 AM
+ */
+?>
+<style>
+#searchbar{
+    padding: 5px;
+}
+.well {
+    border-radius: 0px;
+}
+.has-error {
+    border-color: #A94442;
+    box-shadow: 0px 2px 2px rgba(0, 0, 0, 0.075) inset;
+}
+.has-success {
+    border-color: #3C763D;
+    box-shadow: 0px 2px 2px rgba(0, 0, 0, 0.075) inset;
+}
+</style>
+<div class="col-md-12">
+    <div class="box box-default">
+        <div class="box-header with-border">
+            <h3 class="box-title">Test Results</h3>
+        </div>
+        <div class="box-body">
+            <div class="row" id="searchbar">
+                <div class="col-md-12 well bg-light-blue">
+
+                    <div class="col-md-3">
+                        <div class="input-group">
+                            <span class="input-group-addon"><i class="fa  fa-calendar-o"></i></span>
+                            <input type="text" id="start_date" class="date-picker form-control" placeholder="Start Date"/>
+                                   <div class="input-group">
+                            <input type="text" id="requestIdStart" class="form-control" placeholder="ReqId Start"/>
+                        </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="input-group">
+                            <span class="input-group-addon"><i class="fa  fa-calendar-o"></i></span>
+                            <input type="text" id="end_date" class="date-picker form-control" placeholder="End Date"/>
+                           <div class="input-group">
+                            <input type="text" id="requestIdEnd" class="form-control" placeholder="ReqId End"/>
+                        </div>
+                        </div>
+                    </div>
+                    <div class="col-md-2 text-center">
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-default"><i class="fa fa-angle-left"></i></button>
+                            <button type="button" class="btn btn-default"><i class="fa fa-angle-right"></i></button>
+                        </div>
+                        <label>1-50</label>
+                    </div>
+                    <div class="col-md-2">
+                        <select id="fieldText" class="form-control">
+                            <option value="request_id">ID</option>
+                            <option value="name">Patient Name</option>
+                            <option value="nic">Patient NIC</option>
+                               <option value="test_type">Test Type</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <input type="text" id="byId" placeholder="Search Text" class="form-control"/>
+                         <select id="test_request_type" style="display: none;" class="form-control"></select>
+                    </div>
+
+                </div>
+            </div>
+            <div id="message"></div>
+            <div id="loading" style="display:none;margin-bottom: 5px;"><img src="<?php echo(base_url('assets/img/table_loading.gif')); ?>"></div>
+            <div style="clear: both;" id="otable"></div>
+
+        </div><!-- /.box-body -->
+    </div>
+</div>
+<!--Modal for Edit Test-->
+<div class="modal fade" id="edit" tabindex="-1" role="dialog" aria-labelledby="edit" aria-hidden="true">
+    <div class="modal-dialog">
+    <form id="test_prog_edit_form">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span></button>
+                <h4 class="modal-title custom_align" id="Heading"> Test Result - Comments </h4>
+                 <input type="hidden" class="form-control" id="result_id_edit" name="result_id_edit" readonly="">
+                             <input type="hidden"   class="form-control" id="test_request_id_edit" name="test_request_id_edit">
+            </div>
+            <div class="modal-body col-sm-12">
+                <div class="row col-sm-12 form-horizontal"  >                                    
+                    <div class="form-group">
+
+                        <label for="label_request_id" class="col-sm-3 control-label">Request ID</label>
+                        <div class="col-sm-9">
+                            <input type="text" class="form-control" id="request_id_edit" name="request_id_edit" readonly="">
+                        </div>
+                    </div>
+                           <div class="form-group">
+                        <label for="label_patient_name" class="col-sm-3 control-label">Patient Name</label>
+                        <div class="col-sm-9">
+                            <input type="text" class="form-control" id="patient_name_edit" name="patient_name_edit" readonly="">
+                        </div>
+                    </div>
+
+
+                    <div class="form-group">
+                        <label for="test_request_comment_edit_label" class="col-sm-3 control-label">Verify Comment</label>
+                        <div class="col-sm-9">
+                                <div class='input-group' >          
+
+                                                            <textarea id="test_request_comment_edit" name="test_request_comment_edit" class="form-control" rows="2" readonly=""></textarea>  </div>
+                                                    
+                        </div>                                                                                                                                                                                                                                                                                              
+                    </div>
+                   
+                    <div class="form-group">
+                        <label for="test_request_comment_edit_label" class="col-sm-3 control-label"> Comment</label>
+                        <div class="col-sm-9">
+                                <div class='input-group' >      
+
+                                                            <textarea id="test_request_new_comment_edit" name="test_request_comment_edit" class="form-control" rows="2"></textarea>  </div>
+                                                    
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer ">
+                <button type="button" class="btn btn-warning btn-lg" id = "btn_test_update" style="width: 100%;" aria-hidden="true" data-dismiss="modal"><span class="glyphicon glyphicon-ok-sign"></span> Update</button>
+            </div>
+        </div>
+        <!-- /.modal-content --> 
+        </form>
+    </div>
+    <!-- /.modal-dialog --> 
+</div>
+<script type="text/javascript">
+
+    $( document ).ready(function() {
+        ajaxFetch();
+
+
+
+         $('#test_request_type').on('change', function() {
+
+             //selected text
+        console.log($("#test_request_type :selected").text());
+     $("#loading").show();
+        $.ajax({
+            method: "POST" ,
+            url: "<?php echo base_url('mri_binary_results/getTestReqests'); ?>",
+            data: {"test":"test" },
+            dataType: "JSON"
+        })
+            .done(function( data ) {
+                setTimeout(function() {
+                    $("#loading").hide();
+                }, 1000);
+
+        var regex = new RegExp($("#test_request_type :selected").text(), "i");
+       // console.log("regex"+regex);
+        //serach feild name 
+        var sField = "test_full_name";
+        var jObj = [];
+        $.each(data, function(key, val){
+           // console.log("regex Value"+val[sField].search(regex));
+            if (val[sField].search(regex) != -1) {
+                jObj.push(val);
+            }
+        });
+        // console.log("test serch"+jObj);
+        displayResults(jObj);
+            });
+
+         });
+
+
+        $('#byId').keyup(function(){
+            //console.log("BY ID");
+            ajaxSearch('request_id',$(this).val());
+        });
+
+        $("#start_date").keyup(function(){
+            if($("#start_date").val()=='' || $("#end_date").val()==''){
+                ajaxFetch();
+            }
+        });
+
+         $('#requestIdStart').keyup(function(){
+            if($("#requestIdStart").val()!='' && $("#requestIdEnd").val()!=''){
+                ajaxFetchRequestIDRange();
+            }else{
+                    ajaxFetch();
+            }
+        });
+
+        $("#end_date").keyup(function(){
+            if($("#start_date").val()=='' || $("#end_date").val()==''){
+                ajaxFetch();
+            }
+        });
+
+           $('#requestIdEnd').keyup(function(){
+            if($("#requestIdStart").val()!='' || $("#requestIdEnd").val()!=''){
+               // alert("requestIdEnd");
+                ajaxFetchRequestIDRange();
+           }else {
+            ajaxFetch();
+           }
+        });
+
+        $('.date-picker').datepicker(
+        {
+            format: "yyyy-mm-dd"
+        })
+            .on('changeDate', function(e) {
+                if($("#start_date").val()!='' && $("#end_date").val()!=''){
+                    ajaxFetchPeriodical();
+                }
+            });
+    });
+//Set the positve negative to the string frild
+      $(document).on("change",".values", function() {
+//alert("A");
+           var resultid=$(this).data('result_id');
+           var value = $(this).val();
+
+          $('#result_text_'+resultid).val(value);
+  });
+
+    $(document).on("click","#save-bundle",function(){
+        $("#loading").show();
+        var success = true;
+        $(".values").each(function() {
+            var selectEv = $(this);
+              // if($(this).val()!=null && $(this).val()!=''){
+                //test_requst_id
+                var id = $(this).data('id');
+              
+      var resultid=$(this).data('result_id');
+
+         var text_result =$('#result_text_'+resultid).val();
+         var value = $(this).val();
+
+    var testComment= $('#test_request_new_comment_hdn_'+id).val();
+         
+    var comment= $("#comment_"+resultid+"").val();
+
+              var userid =$("#feildUserId").val();
+                var userName =$("#feildUserName").val();
+                var userRole =$("#feildUserRole").val();
+                console.log(resultid+"|"+id+" | "+value);
+
+        if(text_result!=null && text_result!=''){
+                if(resultid!=null && resultid!=''){
+              
+                  $.ajax({
+                method: "POST" ,
+                url: "<?php echo base_url('mri_binary_results/updateSingleResult1'); ?>",
+                data: {"id":id,"value":value,"comment":comment,"result_by":userid,"result_id":resultid,"test_comment":testComment,"result_id":resultid },
+                dataType: "JSON"
+            })
+                .done(function( data ) {
+                    setTimeout(function() {
+                        $("#loading").hide();
+                    }, 1000);
+                    if(data.success==true) {
+                        var str = '<div class="alert alert-success alert-dismissable">'
+                            + '<button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>'
+                            + 'Successfully saved one record.</div>';
+                        $("#message").html(str);
+                        setTimeout(function() {
+                            $("#message").fadeOut('slow');
+                        }, 1000);
+                    }
+                    ajaxFetch();
+                });
+                
+                }else{
+                $.ajax({
+                    method: "POST" ,
+                    url: "<?php echo base_url('mri_binary_results/addSingleResult'); ?>",
+                    data: {"id":id,"value":text_result,"comment":comment,"result_by":userid,"test_comment":testComment ,"text_result":text_result},
+                    dataType: "JSON"
+                })
+                    .done(function( data ) {
+                        if(data.success==true) {
+                            selectEv.addClass('has-success');
+                            setTimeout(function() {
+                                $("#message").fadeOut('slow');
+                            }, 1000);
+                        } else {
+                            success = false;
+                            selectEv.addClass('has-error');
+                        }
+                        ajaxFetch();
+                    }); 
+                }
+          
+            }
+        });
+        var str = (success) ? "Successfully saved all" : "Some results have not added correctly";
+        $('#message').html(str);
+        $("#loading").hide();
+    });
+
+    $(document).on("click",".single-save",function(){
+        $("#loading").show();
+        var value = $(this).closest('tr').find('.values').val();
+    
+            var id = $(this).data('id');
+
+      var resultid=$(this).data('result_id');
+    var text_result =$('#result_text_'+resultid).val();
+    var testComment= $('#test_request_new_comment_hdn_'+id).val();
+                 
+             var comment= $("#comment_"+resultid+"").val();
+            var userid =$("#feildUserId").val();
+            var userName =$("#feildUserName").val();
+            var userRole =$("#feildUserRole").val();
+            console.log(id+" | "+value+comment+userid)
+
+        if(text_result!= null && text_result!=''){
+             if(resultid!=null && resultid!=''){
+               //   alert("Update");       
+            $.ajax({
+                method: "POST" ,
+                url: "<?php echo base_url('mri_binary_results/updateSingleResult1'); ?>",
+                data: {"id":id,"value":text_result,"comment":comment,"result_by":userid,"result_id":resultid,"test_comment":testComment ,"text_result":text_result},
+                dataType: "JSON"
+            })
+                .done(function( data ) {
+                    setTimeout(function() {
+                        $("#loading").hide();
+                    }, 1000);
+                    if(data.success==true) {
+                        var str = '<div class="alert alert-success alert-dismissable">'
+                            + '<button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>'
+                            + 'Successfully saved one record.</div>';
+                        $("#message").html(str);
+                        setTimeout(function() {
+                            $("#message").fadeOut('slow');
+                        }, 1000);
+                    }
+                    ajaxFetch();
+                });
+                }else{
+              // alert(" Insert");    
+            $.ajax({
+                method: "POST" ,
+                url: "<?php echo base_url('mri_binary_results/addSingleResult'); ?>",
+                data: {"id":id,"value":value,"comment":comment,"result_by":userid,"test_comment":testComment },
+                dataType: "JSON"
+            })
+                .done(function( data ) {
+                    setTimeout(function() {
+                        $("#loading").hide();
+                    }, 1000);
+                    if(data.success==true) {
+                        var str = '<div class="alert alert-success alert-dismissable">'
+                            + '<button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>'
+                            + 'Successfully saved one record.</div>';
+                        $("#message").html(str);
+                        setTimeout(function() {
+                            $("#message").fadeOut('slow');
+                        }, 1000);
+                    }
+                    ajaxFetch();
+                });
+                }
+
+        } else {
+            setTimeout(function() {
+                $("#loading").hide();
+            }, 1000);
+            alert("Please select a value");
+        }
+    });
+
+    function ajaxFetch() {
+        $("#loading").show();
+        $.ajax({
+            method: "POST" ,
+            url: "<?php echo base_url('mri_binary_results/getTestReqests'); ?>",
+            data: {"test":"test"},
+            dataType: "JSON"
+        })
+            .done(function( data ) {
+                setTimeout(function() {
+                    $("#loading").hide();
+                }, 1000);
+                displayResults(data);
+            });
+    }
+
+    function ajaxFetchPeriodical() {
+        $("#loading").show();
+        $.ajax({
+            method: "POST" ,
+            url: "<?php echo base_url('mri_binary_results/getTestReqests'); ?>",
+            data: {"start_reqid":$("#requestIdEnd").val(),"end_reqid":$("#requestIdEnd").val()},
+            dataType: "JSON"
+        })
+            .done(function( data ) {
+                setTimeout(function() {
+                    $("#loading").hide();
+                }, 1000);
+                displayResults(data);
+            });
+    }
+
+     function ajaxFetchRequestIDRange() {
+        console.log("start:"+$("#requestIdStart").val()+"End:"+$("#requestIdEnd").val());
+        $("#loading").show();
+        $.ajax({
+            method: "POST" ,
+            url: "<?php echo base_url('mri_binary_results/getTestReqests'); ?>",
+            data: {"start_reqID":$("#requestIdStart").val(),"end_reqID":$("#requestIdEnd").val()},
+            dataType: "JSON"
+        })
+            .done(function( data ) {
+                setTimeout(function() {
+                    $("#loading").hide();
+                }, 1000);
+                displayResults(data);
+            });
+    }
+
+    function ajaxSearch(field,text) {
+        $("#loading").show();
+        $.ajax({
+            method: "POST" ,
+            url: "<?php echo base_url('mri_binary_results/getTestReqests'); ?>",
+            data: {"test":"test" },
+            dataType: "JSON"
+        })
+            .done(function( data ) {
+                setTimeout(function() {
+                    $("#loading").hide();
+                }, 1000);
+                formatJson($('#fieldText').val(),text,data);
+            });
+    }
+
+    function displayResults(obj) {
+        var str = '<table class="table table-hover table-bordered">'
+                        + '<tbody><tr>'
+                        + '<th>ID</th>'
+                        + '<th>Patient</th>'
+                        + '<th>Date</th>'
+                        + '<th>Priority</th>'
+                        + '<th>Test Type</th>'
+                        + '<th >Result</th>'
+                         + '<th >Test Comment</th>'
+                        + '<th>Actions</th>'
+                        + '<th>Msg.</th>'
+                        + '</tr>';
+        var hasData=false;
+        $.each(obj, function(x, val) {
+            var d = new Date(val.test_request_date);
+            var dStr = d.getFullYear() + ' - ' + (d.getMonth()+1) + ' - ' + d.getDate();
+            var satus = val.status;
+            console.log("status"+satus);
+            var backgrondcolor="background-color:none;";
+            var defcomment= val.defult_test_comment;
+            //There will be no result id at this stage 
+            var resultid=val.test_request_id;
+            console.log("resultid"+resultid);
+            if(satus==3) {backgrondcolor="background-color:#00a65a;";
+            defcomment=val.result_comment;
+        }
+            str += '<tr style='+backgrondcolor+' >';
+            str += '<td>'+val.request_id+'</td>';
+            str += '<td>'+val.name+'</td>';
+            str += '<td>'+dStr+'</td>';
+            str += '<td>'+val.test_priority+'</td>';
+            str += '<td>'+val.test_full_name+'</td>';
+            str += '<td><select data-id="'+val.test_request_id+'" class="values form-control" name="'+val.request_id+'" data-result_id="'+resultid+'"><option value="" disabled selected hidden>Please Choose</option><option value="Negative">Negative</option><option value="Positive">Positive</option></select> <input type="text" class="form-control" id="result_text_'+resultid+'" name="result_text_'+resultid+'"></td>';
+            str += '<td>   <textarea id="comment_'+resultid+'" name="comment_'+resultid+'" class="form-control" rows="2">'+defcomment+'</textarea></td>';
+            str += '<td><button type="button" data-id="'+val.test_request_id+'"  data-result_id="'+resultid+'" class="btn btn-block btn-primary single-save">Save</button></td>';
+            str += "<td><p data-placement='top' data-toggle='tooltip' title='Edit'><button class='btn btn-primary btn-xs btn_edit' data-title='Edit' data-request_id='"+val.request_id+"' data-test_request_id='"+val.test_request_id+"' data-comment='"+val.comments+"' data-toggle='modal' data-target='#edit' ><span class='glyphicon glyphicon-pencil'></span></button></p><input type='hidden'  class='form-control' id='test_request_comment_hdn_"+val.test_request_id+"'  name='test_request_comment_hdn_"+val.test_request_id+"' value='"+val.comments+"'><input type='hidden'  class='form-control' id='test_request_new_comment_hdn_"+val.test_request_id+"'  name='test_request_new_comment_hdn_"+val.test_request_id+"' value='"+val.comments+"' ></td></tr>";
+            hasData = true;
+        });
+        if(hasData)
+            str += '<tr><td colspan="7"><button class="btn btn-success" id="save-bundle">Save All Selected Results</button> <label for="test_request_comment_edit_label" id="saveError"  control-label"></label></td></tr>';
+        str += '</tbody></table>';
+
+        $('#otable').html(str);
+    }
+
+    function formatJson(field,text,obj) {
+        var regex = new RegExp(text, "i");
+        var sField = field;
+     //   console.log("sField"+sField+"text"+text);
+        var jObj = [];
+        $.each(obj, function(key, val){
+            if ((val[sField].search(regex) != -1)) {
+                jObj.push(val);
+            }
+        });
+        displayResults(jObj);
+    }
+
+
+    // Edit button Click event
+$(document).on('click','.btn_edit',function(){
+    //alert('button edit');
+    var test_request_id= $(this).data('test_request_id');
+    $('#test_request_id_edit').val($(this).data('test_request_id'));
+      $('#result_id_edit').val($(this).data('result_id'));
+    $('#patient_name_edit').val($(this).closest("tr").find('td:eq(1)').text());
+      $('#request_id_edit').val($(this).data('request_id'));
+      $('#test_request_comment_edit').val($('#test_request_comment_hdn_'+test_request_id).val());
+      //Clear ne comment Feild 
+
+       $('#test_request_new_comment_edit').val("");
+});
+
+//Edit Popup Update Window
+      $('#btn_test_update').click(function () {
+
+                var json = [];
+                var obj = {};
+                 var test_request_id = $('#test_request_id_edit').val();
+                var request_id = $('#request_id_edit').val();
+                var comments = $('#test_request_new_comment_edit').val();
+                var userid =$("#feildUserId").val();
+                 var userName =$("#feildUserName").val();
+                var userRole =$("#feildUserRole").val();
+                //create comment
+                comments= comments+" - by "+userName+"-("+userRole+")";
+
+
+                //Append old test Comment with new Commen 
+
+                comments =$('#test_request_comment_edit').val()+"\n"+comments;       
+ $('#test_request_new_comment_hdn_'+test_request_id).val(comments);
+ console.log(test_request_id+comments);
+
+/*
+                 obj ['testRequestId'] = test_request_id;
+                 obj ['testRequestComment'] = comments+" - by "+userName+"-("+userRole+")";
+
+
+                json.push(obj)
+                var testRequestJSONObject = {"testrequest": json};
+                 // alert(JSON.stringify(testRequestJSONObject));
+                    console.log(test_request_type);
+                          $.ajax({
+                    type: "POST",
+                    url: 'test_request_progress_controller/UpdateTestRequestComment',
+                    data: {'testrequest': testRequestJSONObject}, success: function (output) {
+                     alert("Successfully Updated");
+                        // window.setTimeout("alert('Successfully Updated');", 1);
+                         window.setTimeout('location.reload()', 500);
+                    }
+                });   */         
+        });
+ $('.close').click(function () {
+          var test_request_id = $('#test_request_id_edit').val();
+                var request_id = $('#request_id_edit').val();
+                var comments = $('#test_request_new_comment_edit').val();
+                var userid =$("#feildUserId").val();
+                 var userName =$("#feildUserName").val();
+                var userRole =$("#feildUserRole").val();
+                //create comment
+                comments= comments+" - by "+userName+"-("+userRole+")";
+
+
+                //Append old test Comment with new Commen 
+
+                comments =$('#test_request_comment_edit').val()+"\n"+comments;       
+ $('#test_request_new_comment_hdn_'+test_request_id).val(comments);
+ console.log(test_request_id+comments);
+
+ });
+
+ 
+    $('#fieldText').on('change', function() {
+ // alert( this.value ); 
+  // or $(this).val()
+  if(this.value=="test_type"){
+
+    $('#test_request_type').show();
+
+    $('#byId').hide();
+
+    $('#test_request_type').empty();
+
+    
+    
+//test types without department 
+            $.ajax({
+                type: "GET",
+                url: 'lab_tests_controller/getAllLabTests',
+                dataType: 'json',
+                success: function (output) {
+                    //alert(JSON.stringify(output));
+                    $('#test_request_type').append('<option value=-1></option>');
+                    $.each(output, function (key, val) {
+
+                        $('#test_request_type').append('<option value=' + val[0] + '>' + val[1] + '</option>');
+                    });
+                }
+            });
+  }else {
+
+    $('#test_request_type').hide();
+
+    $('#byId').show();
+
+  }
+});
+
+
+</script>
